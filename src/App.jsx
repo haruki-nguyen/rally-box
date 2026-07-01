@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import { KeyboardControls, OrbitControls } from "@react-three/drei";
 import { Physics } from "@react-three/rapier";
 import Scene from "./Scene";
+import { Suspense } from "react";
 
 // Define the keymap
 const keyboardMap = [

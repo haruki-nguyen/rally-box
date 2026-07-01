@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import { useKeyboardControls } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody } from "@react-three/rapier";
+import { CuboidCollider, RigidBody } from "@react-three/rapier";
 import { useRef } from "react";
+import { SedanSports } from "./components/SedanSports";
 
 export default function Scene() {
   const [, getKeys] = useKeyboardControls();
@@ -13,8 +14,8 @@ export default function Scene() {
 
     // Get real-time key states
     const { forward, backward, left, right } = getKeys();
-    const speed = 15 * delta;
-    const turnSpeed = 7.5 * delta;
+    const speed = 250 * delta;
+    const turnSpeed = 200 * delta;
 
     // Get current rotation
     const pos = boxRef.current.translation();
@@ -29,12 +30,19 @@ export default function Scene() {
     // 2. .applyEuler(euler) tilts that arrow to match the exact direction the box is facing.
     const forwardVector = new THREE.Vector3(0, 0, -1).applyEuler(euler);
 
-    // .multiplyScalar(speed) stretches the direction arrow to match your speed value.
+    // .clone() before multiplying to protect the base vector
     // .applyImpulse(..., true) gives the box a physics push along that stretched arrow.
+    // .multiplyScalar(speed) stretches the direction arrow to match your speed value.
     if (forward)
-      boxRef.current.applyImpulse(forwardVector.multiplyScalar(speed), true);
+      boxRef.current.applyImpulse(
+        forwardVector.clone().multiplyScalar(speed),
+        true,
+      );
     if (backward)
-      boxRef.current.applyImpulse(forwardVector.multiplyScalar(-speed), true);
+      boxRef.current.applyImpulse(
+        forwardVector.clone().multiplyScalar(-speed),
+        true,
+      );
 
     // .applyTorqueImpulse(..., true) applies a rotational twisting force (like twisting a jar lid).
     // Twisting around the Y-axis (up/down axis) makes the front of the box spin left or right.
@@ -72,14 +80,20 @@ export default function Scene() {
       <RigidBody
         ref={boxRef}
         position={[0, 5, 0]}
-        colliders="cuboid"
         linearDamping={0.5} // Air resistance
         angularDamping={0.8} // Prevent infinite spinning
+        mass={1}
+        colliders={false}
       >
-        <mesh castShadow>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="coral" />
-        </mesh>
+        {/* Fix physical collider */}
+        <CuboidCollider args={[1.0, 0.6, 1.8]} position={[0, 0.6, 0]} />
+
+        {/* Visual car model */}
+        <group
+          rotation={[0, Math.PI, 0]} // Rotate the car 180 degrees around the Y axis
+        >
+          <SedanSports />
+        </group>
       </RigidBody>
 
       {/* Static Ground Floor */}
